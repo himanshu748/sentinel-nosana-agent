@@ -19,9 +19,10 @@ COPY . .
 
 RUN mkdir -p /app/data
 
-EXPOSE 3000
+EXPOSE 3000 5173
 
 ENV NODE_ENV=production
 ENV SERVER_PORT=3000
+ENV FRONTEND_PORT=5173
 
-CMD ["bun", "run", "start"]
+CMD ["sh", "-c", "bun run start & node frontend/serve.js"]

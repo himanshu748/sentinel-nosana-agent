@@ -101,4 +101,4 @@ export const rssFeedProvider: Provider = {
   },
 };
 
-export { getAllNews };
+export { getAllNews, extractItems };

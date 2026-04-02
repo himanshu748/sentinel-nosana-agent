@@ -4,7 +4,7 @@
       "id": "sentinel-agent",
       "args": {
         "image": "sentinel-agent:latest",
-        "expose": 3000,
+        "expose": [3000, 5173],
         "env": {
           "OPENAI_API_KEY": "nosana",
           "OPENAI_API_URL": "https://6vq2bcqphcansrs9b88ztxfs88oqy7etah2ugudytv2x.node.k8s.prd.nos.ci/v1",

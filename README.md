@@ -2,7 +2,7 @@
 
 > A personal crypto research analyst powered by [ElizaOS](https://elizaos.ai) and [Nosana](https://nosana.com) decentralized GPU compute.
 
-Built for the **Nosana x ElizaOS Builders Challenge** (March 2026).
+Built for the **Nosana x ElizaOS Builders Challenge** (April 2026).
 
 ---
 
@@ -24,6 +24,7 @@ Inspired by the [OpenClaw](https://openclaw.org) philosophy: your AI, your data,
 | **Token Analysis** | Deep-dive on any token with price, on-chain metrics, risk factors | CoinGecko + DeFiLlama |
 | **News Digest** | Aggregated headlines from top crypto news outlets | CoinDesk, CoinTelegraph, The Block |
 | **Research Topic** | Open-ended research using ALL data sources | All 4 providers |
+| **Nosana Ecosystem** | NOS token analysis and Nosana network overview | CoinGecko + Nosana Network |
 
 ### Example Queries
 
@@ -34,6 +35,8 @@ Inspired by the [OpenClaw](https://openclaw.org) philosophy: your AI, your data,
 "Research the state of Solana DeFi"
 "Tell me about Ethereum's DeFi ecosystem"
 "What's happening with Bitcoin this week?"
+"What's the NOS price?"
+"Tell me about Nosana"
 ```
 
 ---
@@ -54,6 +57,7 @@ User Query (Chat Interface)
 │  │  - Token Analysis    │ │
 │  │  - News Digest       │ │
 │  │  - Research Topic    │ │
+│  │  - Nosana Ecosystem  │ │
 │  └────────┬─────────────┘ │
 │           │               │
 │  ┌────────v─────────────┐ │
@@ -113,9 +117,23 @@ bun install
 bun run dev
 ```
 
-The agent starts on `http://localhost:3000`. Open the chat interface and start asking questions.
+The agent starts on `http://localhost:3000`. The built-in ElizaOS chat UI is available at that URL.
 
-### 3. Deploy to Nosana
+### 3. Run the Custom Frontend
+
+```bash
+# In a separate terminal:
+npm run frontend
+```
+
+Opens the Sentinel-branded research terminal at `http://localhost:5173`. Features:
+- Dark themed chat UI matching Nosana aesthetics
+- Quick action buttons for common queries (Market Briefing, NOS Price, News, etc.)
+- Real-time streaming responses via Socket.IO
+- Markdown rendering for formatted analysis
+- Mobile responsive layout
+
+### 4. Deploy to Nosana
 
 ```bash
 # Build Docker image
@@ -136,29 +154,66 @@ nosana job post --file nos_job_def/nosana_eliza_job_definition.json --market GPU
 ```
 sentinel-agent/
 ├── src/
-│   ├── index.ts                    # Plugin entry point
+│   ├── index.ts                    # Project entry point
 │   ├── actions/
 │   │   ├── marketBriefing.ts       # Market overview action
 │   │   ├── tokenAnalysis.ts        # Single token deep-dive
 │   │   ├── newsDigest.ts           # News aggregation
-│   │   └── researchTopic.ts        # Open-ended research
+│   │   ├── researchTopic.ts        # Open-ended research
+│   │   └── nosanaEcosystem.ts      # NOS token & Nosana network
 │   ├── providers/
-│   │   ├── coingecko.ts            # CoinGecko price/market data
-│   │   ├── defillama.ts            # DeFiLlama TVL/protocol data
+│   │   ├── coingecko.ts            # CoinGecko price/market data (60s cache)
+│   │   ├── defillama.ts            # DeFiLlama TVL/protocol data (120s cache)
 │   │   ├── rssFeed.ts              # RSS news aggregation
 │   │   └── solanaOnChain.ts        # Solana RPC on-chain data
-│   └── evaluators/
-│       ├── freshness.ts            # Data staleness detection
-│       └── sourceQuality.ts        # Source diversity scoring
+│   ├── evaluators/
+│   │   ├── freshness.ts            # Data staleness detection
+│   │   └── sourceQuality.ts        # Source diversity scoring
+│   ├── utils/
+│   │   └── cache.ts                # Generic TTL cache layer
+│   └── __tests__/                  # 60+ test cases
+│       ├── cache.test.ts           # Cache utility tests
+│       ├── providers.test.ts       # Provider formatter tests
+│       ├── plugin.test.ts          # Plugin structure validation
+│       ├── actions.test.ts         # Action handler tests
+│       ├── evaluators.test.ts      # Evaluator logic tests
+│       └── rssFeed.test.ts         # RSS parser tests
+├── frontend/
+│   ├── index.html                  # Sentinel chat UI
+│   ├── style.css                   # Dark theme styles
+│   ├── app.js                      # Socket.IO client
+│   └── serve.js                    # Dev server with backend proxy
 ├── characters/
 │   └── sentinel.character.json     # Agent personality & config
 ├── nos_job_def/
 │   └── nosana_eliza_job_definition.json
+├── vitest.config.ts
 ├── Dockerfile
 ├── .env.example
 ├── package.json
 └── tsconfig.json
 ```
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode
+npm run test:watch
+```
+
+**60+ test cases** across 6 test suites covering:
+
+- **Cache utility** — TTL behavior, expiry, key isolation, clearing
+- **Provider formatters** — USD/percentage formatting edge cases
+- **Plugin structure** — All actions, providers, evaluators properly registered
+- **Action handlers** — Callback invocation, error handling, graceful degradation
+- **Evaluator logic** — Freshness detection, source quality scoring
+- **RSS parser** — XML extraction, CDATA handling, edge cases
 
 ---
 
@@ -173,6 +228,10 @@ sentinel-agent/
 4. **60k context window** — The Qwen3.5-27B model's large context is used to inject rich data from multiple sources before generating each response, enabling truly data-driven analysis.
 
 5. **Evaluators for quality** — Freshness checks ensure data isn't stale, and source quality scoring tracks how many independent sources back each response.
+
+6. **Response caching** — CoinGecko (60s) and DeFiLlama (120s) responses are cached to prevent rate limiting and improve response latency.
+
+7. **Custom frontend** — A Sentinel-branded chat UI connects via Socket.IO for real-time streaming responses, with quick action buttons for the most common queries.
 
 ---
 

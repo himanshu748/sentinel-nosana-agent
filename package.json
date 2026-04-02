@@ -8,7 +8,9 @@
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
-    "test": "elizaos test"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "frontend": "node frontend/serve.js"
   },
   "dependencies": {
     "@elizaos/core": "^1.0.0",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@elizaos/cli": "^1.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "1.6.0"
   }
 }
