@@ -19,9 +19,6 @@
           "NODE_ENV": "production",
           "ELIZAOS_TELEMETRY_DISABLED": "true"
         },
-        "resources": {
-          "gpu": "1"
-        }
       }
     }
   ]
