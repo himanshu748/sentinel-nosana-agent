@@ -1,28 +1,28 @@
 {
+  "version": "0.1",
+  "type": "container",
+  "meta": {
+    "trigger": "api"
+  },
   "ops": [
     {
       "id": "sentinel-agent",
+      "type": "container/run",
       "args": {
-        "image": "sentinel-agent:latest",
-        "expose": [3000, 5173],
+        "image": "ghcr.io/himanshu748/sentinel-nosana-agent:latest",
+        "expose": 3000,
         "env": {
           "OPENAI_API_KEY": "nosana",
-          "OPENAI_API_URL": "https://6vq2bcqphcansrs9b88ztxfs88oqy7etah2ugudytv2x.node.k8s.prd.nos.ci/v1",
-          "MODEL_NAME": "qwen3.5-27b",
-          "OPENAI_EMBEDDING_URL": "https://4yiccatpyxx773jtewo5ccwhw1s2hezq5pehndb6fcfq.node.k8s.prd.nos.ci/v1",
-          "OPENAI_EMBEDDING_API_KEY": "nosana",
-          "OPENAI_EMBEDDING_MODEL": "Qwen3-Embedding-0.6B",
-          "OPENAI_EMBEDDING_DIMENSIONS": "1024",
+          "OPENAI_API_URL": "http://localhost:8000/v1",
+          "MODEL_NAME": "Qwen/Qwen2.5-7B-Instruct-AWQ",
           "SERVER_PORT": "3000",
           "NODE_ENV": "production",
           "ELIZAOS_TELEMETRY_DISABLED": "true"
+        },
+        "resources": {
+          "gpu": "1"
         }
-      },
-      "execution": {
-        "group": "run"
-      },
-      "type": "container/run"
+      }
     }
-  ],
-  "version": "0.1"
+  ]
 }
