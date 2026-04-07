@@ -10,6 +10,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Environment files
+.env
 .env.local
 .env.example
 .env.*.local
@@ -49,3 +50,9 @@ coverage/
 .nyc_output/
 *.test.js
 *.spec.js
+src/__tests__/
+vitest.config.ts
+
+# ElizaOS data
+.eliza/
+bun.lock
