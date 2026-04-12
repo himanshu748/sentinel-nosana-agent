@@ -3,10 +3,12 @@ import { request as httpsRequest } from "node:https";
 import { readFileSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Socket } from "node:net";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const PORT = process.env.FRONTEND_PORT || 5173;
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
+const backendUrl = new URL(BACKEND_URL);
 
 const MIME = {
   ".html": "text/html",
@@ -18,23 +20,27 @@ const MIME = {
   ".ico": "image/x-icon",
 };
 
+function proxyHttp(req, res) {
+  const url = new URL(req.url, BACKEND_URL);
+  const doRequest = url.protocol === "https:" ? httpsRequest : httpRequest;
+  const proxyReq = doRequest(
+    url,
+    { method: req.method, headers: { ...req.headers, host: url.host } },
+    (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res);
+    }
+  );
+  req.pipe(proxyReq);
+  proxyReq.on("error", () => {
+    res.writeHead(502);
+    res.end("Backend unavailable");
+  });
+}
+
 const server = createServer((req, res) => {
   if (req.url.startsWith("/api/") || req.url.startsWith("/socket.io/")) {
-    const url = new URL(req.url, BACKEND_URL);
-    const doRequest = url.protocol === "https:" ? httpsRequest : httpRequest;
-    const proxyReq = doRequest(
-      url,
-      { method: req.method, headers: { ...req.headers, host: url.host } },
-      (proxyRes) => {
-        res.writeHead(proxyRes.statusCode, proxyRes.headers);
-        proxyRes.pipe(res);
-      }
-    );
-    req.pipe(proxyReq);
-    proxyReq.on("error", () => {
-      res.writeHead(502);
-      res.end("Backend unavailable");
-    });
+    proxyHttp(req, res);
     return;
   }
 
@@ -52,6 +58,28 @@ const server = createServer((req, res) => {
     res.writeHead(404);
     res.end("Not found");
   }
+});
+
+server.on("upgrade", (req, socket, head) => {
+  if (!req.url.startsWith("/socket.io/")) {
+    socket.destroy();
+    return;
+  }
+
+  const target = new Socket();
+  target.connect(Number(backendUrl.port) || 3000, backendUrl.hostname || "localhost", () => {
+    const reqLine = `${req.method} ${req.url} HTTP/1.1\r\n`;
+    const headers = Object.entries(req.headers)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join("\r\n");
+    target.write(reqLine + headers + "\r\n\r\n");
+    if (head && head.length) target.write(head);
+    target.pipe(socket);
+    socket.pipe(target);
+  });
+
+  target.on("error", () => socket.destroy());
+  socket.on("error", () => target.destroy());
 });
 
 server.listen(PORT, () => {

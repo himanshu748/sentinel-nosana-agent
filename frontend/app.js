@@ -18,6 +18,7 @@
 
   let socket = null;
   let agentId = null;
+  const serverId = "00000000-0000-0000-0000-000000000000";
   let entityId = localStorage.getItem("sentinel-eid") || (function () { var id = uuid(); localStorage.setItem("sentinel-eid", id); return id; })();
   let channelId = localStorage.getItem("sentinel-cid") || (function () { var id = uuid(); localStorage.setItem("sentinel-cid", id); return id; })();
   let isConnected = false;
@@ -108,7 +109,7 @@
     socket.emit(String(SOCKET_MESSAGE_TYPE.ROOM_JOINING), {
       channelId: channelId, roomId: channelId,
       agentId: agentId, entityId: entityId,
-      messageServerId: agentId,
+      messageServerId: serverId,
       username: "user", displayName: "User",
       metadata: { isDm: true, channelType: "DM" },
     });
@@ -132,7 +133,7 @@
     socket.emit(String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE), {
       channelId: channelId, roomId: channelId,
       senderId: entityId, senderName: "User",
-      message: text, messageServerId: agentId,
+      message: text, messageServerId: serverId,
       messageId: uuid(), source: "sentinel_frontend",
       metadata: { isDm: true, channelType: "DM" },
     });
