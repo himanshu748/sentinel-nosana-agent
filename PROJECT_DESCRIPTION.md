@@ -8,7 +8,7 @@ Crypto research today means juggling dozens of tabs: CoinGecko for prices, DeFiL
 
 ## The Solution
 
-Sentinel is an ElizaOS v2 agent with a custom plugin that aggregates five real-time data sources — CoinGecko (market data), DeFiLlama (DeFi TVL/protocols), crypto news RSS feeds (CoinDesk, CoinTelegraph, The Block), Solana's public RPC (on-chain metrics), and Nosana network data — then synthesizes them through Qwen3.5-27B-AWQ-4bit running on Nosana's decentralized GPU network.
+Sentinel is an ElizaOS v2 agent with a custom plugin that aggregates five real-time data sources — CoinGecko (market data), DeFiLlama (DeFi TVL/protocols), crypto news RSS feeds (CoinDesk, CoinTelegraph, The Block), Solana's public RPC (on-chain metrics), and Nosana network data — then synthesizes them through Qwen3.5-9B-FP8 running on Nosana's decentralized GPU network.
 
 **Five core capabilities:**
 - **Market Briefings:** Full market overview with prices, volume, DeFi TVL, and top movers
@@ -30,4 +30,4 @@ Sentinel is an ElizaOS v2 agent with a custom plugin that aggregates five real-t
 - **Decentralized end-to-end** — inference on Nosana GPUs, data from open APIs, no centralized dependencies
 - **60+ test cases** — comprehensive test suite covering actions, providers, evaluators, and plugin structure
 
-**Tech:** ElizaOS v2 / TypeScript / 4 providers / 5 actions / 2 evaluators / Qwen3.5-27B on Nosana / Docker / Custom Frontend
+**Tech:** ElizaOS v2 / TypeScript / 4 providers / 5 actions / 2 evaluators / Qwen3.5-9B on Nosana / Docker / Custom Frontend

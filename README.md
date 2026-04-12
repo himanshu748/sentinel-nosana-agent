@@ -75,8 +75,8 @@ User Query (Chat Interface)
            v
 ┌──────────────────────────┐
 │  Nosana GPU Network       │
-│  Qwen3.5-27B-AWQ-4bit    │
-│  (60k token context)      │
+│  Qwen3.5-9B-FP8          │
+│  (30k token context)      │
 └──────────────────────────┘
 ```
 
@@ -85,7 +85,7 @@ User Query (Chat Interface)
 ## Tech Stack
 
 - **Framework:** [ElizaOS v2](https://docs.elizaos.ai) — TypeScript AI agent framework
-- **LLM:** Qwen3.5-27B-AWQ-4bit via Nosana hosted endpoint (60k token context)
+- **LLM:** Qwen3.5-9B-FP8 via Nosana hosted endpoint (30k token context)
 - **Embeddings:** Qwen3-Embedding-0.6B via Nosana
 - **Compute:** [Nosana](https://nosana.com) — Decentralized GPU network on Solana
 - **Data Sources:** CoinGecko (free), DeFiLlama (free), RSS feeds (free), Solana public RPC
@@ -116,8 +116,8 @@ The `.env.example` includes Nosana's hosted endpoints for the Builders Challenge
 
 ```env
 OPENAI_API_KEY=nosana
-OPENAI_API_URL=https://6vq2bcqphcansrs9b88ztxfs88oqy7etah2ugudytv2x.node.k8s.prd.nos.ci/v1
-MODEL_NAME=Qwen3.5-27B-AWQ-4bit
+OPENAI_API_URL=https://5i8frj7ann99bbw9gzpprvzj2esugg39hxbb4unypskq.node.k8s.prd.nos.ci/v1
+MODEL_NAME=Qwen3.5-9B-FP8
 ```
 
 For local development with another provider, update `OPENAI_API_URL` and `MODEL_NAME`.
@@ -248,7 +248,7 @@ npm run test:watch
 
 3. **Structured output** — Every response follows a consistent format: Summary, Key Data, Analysis, Sources. This makes responses scannable and trustworthy.
 
-4. **60k context window** — The Qwen3.5-27B model's large context injects rich data from multiple sources before generating each response, enabling truly data-driven analysis.
+4. **30k context window** — The Qwen3.5-9B model's large context injects rich data from multiple sources before generating each response, enabling truly data-driven analysis.
 
 5. **Evaluators for quality** — Freshness checks ensure data isn't stale, and source quality scoring tracks how many independent sources back each response.
 
@@ -264,7 +264,7 @@ npm run test:watch
 
 Sentinel runs on Nosana's decentralized GPU network:
 
-- **Inference:** Qwen3.5-27B-AWQ-4bit hosted on Nosana nodes
+- **Inference:** Qwen3.5-9B-FP8 hosted on Nosana nodes
 - **Embeddings:** Qwen3-Embedding-0.6B on Nosana
 - **Deployment:** Docker container deployed via Nosana job definition
 - **Resource efficient:** Cached responses and optimized prompts minimize GPU usage
