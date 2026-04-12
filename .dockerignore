@@ -55,4 +55,3 @@ vitest.config.ts
 
 # ElizaOS data
 .eliza/
-bun.lock

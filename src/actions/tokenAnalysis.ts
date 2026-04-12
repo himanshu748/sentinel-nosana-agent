@@ -3,51 +3,57 @@ import { ModelType } from "@elizaos/core";
 import { getCoinData, formatUSD, formatPct } from "../providers/coingecko.js";
 import { getProtocolByName } from "../providers/defillama.js";
 
-function extractTokenId(text: string): string {
-  const lower = text.toLowerCase();
-  const tokenMap: Record<string, string> = {
-    btc: "bitcoin", bitcoin: "bitcoin",
-    eth: "ethereum", ethereum: "ethereum",
-    sol: "solana", solana: "solana",
-    bnb: "binancecoin", binance: "binancecoin",
-    xrp: "ripple", ripple: "ripple",
-    ada: "cardano", cardano: "cardano",
-    doge: "dogecoin", dogecoin: "dogecoin",
-    dot: "polkadot", polkadot: "polkadot",
-    avax: "avalanche-2", avalanche: "avalanche-2",
-    matic: "matic-network", polygon: "matic-network",
-    link: "chainlink", chainlink: "chainlink",
-    uni: "uniswap", uniswap: "uniswap",
-    aave: "aave",
-    mkr: "maker", maker: "maker",
-    nos: "nosana", nosana: "nosana",
-    jup: "jupiter-exchange-solana", jupiter: "jupiter-exchange-solana",
-    ray: "raydium", raydium: "raydium",
-    jto: "jito-governance-token", jito: "jito-governance-token",
-    sui: "sui", apt: "aptos", aptos: "aptos",
-    arb: "arbitrum", arbitrum: "arbitrum",
-    op: "optimism", optimism: "optimism",
-    atom: "cosmos", cosmos: "cosmos",
-    near: "near", fil: "filecoin", filecoin: "filecoin",
-    stx: "blockstack", icp: "internet-computer",
-    ton: "the-open-network", tia: "celestia", celestia: "celestia",
-    render: "render-token", rndr: "render-token",
-    wif: "dogwifcoin", bonk: "bonk", pepe: "pepe",
-    ldo: "lido-dao", lido: "lido-dao",
-    crv: "curve-dao-token", curve: "curve-dao-token",
-    pendle: "pendle", eigen: "eigenlayer",
-    pyth: "pyth-network",
-  };
+const TOKEN_MAP: Record<string, string> = {
+  btc: "bitcoin", bitcoin: "bitcoin",
+  eth: "ethereum", ethereum: "ethereum",
+  sol: "solana", solana: "solana",
+  bnb: "binancecoin", binance: "binancecoin",
+  xrp: "ripple", ripple: "ripple",
+  ada: "cardano", cardano: "cardano",
+  doge: "dogecoin", dogecoin: "dogecoin",
+  dot: "polkadot", polkadot: "polkadot",
+  avax: "avalanche-2", avalanche: "avalanche-2",
+  matic: "matic-network", polygon: "matic-network",
+  link: "chainlink", chainlink: "chainlink",
+  uni: "uniswap", uniswap: "uniswap",
+  aave: "aave",
+  mkr: "maker", maker: "maker",
+  nos: "nosana", nosana: "nosana",
+  jup: "jupiter-exchange-solana", jupiter: "jupiter-exchange-solana",
+  ray: "raydium", raydium: "raydium",
+  jto: "jito-governance-token", jito: "jito-governance-token",
+  sui: "sui", apt: "aptos", aptos: "aptos",
+  arb: "arbitrum", arbitrum: "arbitrum",
+  op: "optimism", optimism: "optimism",
+  atom: "cosmos", cosmos: "cosmos",
+  near: "near", fil: "filecoin", filecoin: "filecoin",
+  stx: "blockstack", icp: "internet-computer",
+  ton: "the-open-network", tia: "celestia", celestia: "celestia",
+  render: "render-token", rndr: "render-token",
+  wif: "dogwifcoin", bonk: "bonk", pepe: "pepe",
+  ldo: "lido-dao", lido: "lido-dao",
+  crv: "curve-dao-token", curve: "curve-dao-token",
+  pendle: "pendle", eigen: "eigenlayer",
+  pyth: "pyth-network",
+};
 
-  for (const [key, id] of Object.entries(tokenMap)) {
-    if (lower.includes(key)) return id;
+const STOP_WORDS = new Set([
+  "me", "my", "the", "a", "an", "for", "can", "you", "your",
+  "analyze", "analysis", "token", "about", "tell", "what", "how",
+  "is", "are", "do", "does", "give", "get", "show", "please",
+  "want", "like", "think", "price", "of", "in", "on", "it",
+  "this", "that", "with", "and", "or", "but", "not", "to",
+]);
+
+function extractTokenId(text: string): string {
+  const words = text.toLowerCase().split(/\s+/).map((w) => w.replace(/[^a-z0-9]/g, ""));
+
+  for (const w of words) {
+    if (TOKEN_MAP[w]) return TOKEN_MAP[w];
   }
 
-  const words = lower.split(/\s+/);
   for (const w of words) {
-    if (w.length >= 2 && !["me", "the", "for", "can", "you", "analyze", "analysis", "token", "about", "tell", "what", "how", "is"].includes(w)) {
-      return w;
-    }
+    if (w.length >= 3 && !STOP_WORDS.has(w)) return w;
   }
   return "bitcoin";
 }

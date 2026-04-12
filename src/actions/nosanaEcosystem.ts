@@ -1,11 +1,42 @@
 import type { Action, IAgentRuntime, Memory, HandlerCallback, State } from "@elizaos/core";
 import { ModelType } from "@elizaos/core";
 import { getCoinData, formatUSD, formatPct } from "../providers/coingecko.js";
+import { cached } from "../utils/cache.js";
+
+const NOSANA_CACHE_TTL = 120_000;
+
+interface NosanaNetworkStats {
+  totalNodes: number | null;
+  activeJobs: number | null;
+  totalGPUs: string | null;
+}
+
+async function fetchNosanaStats(): Promise<NosanaNetworkStats> {
+  return cached("nosana:stats", NOSANA_CACHE_TTL, async () => {
+    try {
+      const res = await fetch("https://dashboard.k8s.prd.nos.ci/api/nodes", {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const nodes = Array.isArray(data) ? data : data?.data ?? [];
+        return {
+          totalNodes: nodes.length || null,
+          activeJobs: null,
+          totalGPUs: null,
+        };
+      }
+    } catch {}
+    return { totalNodes: null, activeJobs: null, totalGPUs: null };
+  });
+}
 
 async function gatherNosanaData(): Promise<string> {
-  const [nosData, solData] = await Promise.all([
+  const [nosData, solData, networkStats] = await Promise.all([
     getCoinData("nosana"),
     getCoinData("solana"),
+    fetchNosanaStats(),
   ]);
 
   const parts: string[] = [];
@@ -26,11 +57,23 @@ async function gatherNosanaData(): Promise<string> {
   }
 
   parts.push("\nNosana Network Info:");
-  parts.push("- Decentralized GPU compute network on Solana");
-  parts.push("- Supports AI inference workloads (LLM, image gen, embeddings)");
-  parts.push("- NOS token used for staking and paying for GPU compute");
-  parts.push("- Open-source models available: Qwen, Llama, DeepSeek, Mistral");
-  parts.push("- GPU providers earn NOS by sharing compute resources");
+  parts.push("- Decentralized GPU compute network built on Solana");
+  parts.push("- Powers AI inference workloads: LLM serving, image generation, embeddings");
+  parts.push("- NOS token used for staking by GPU providers and paying for compute");
+  parts.push("- Supports open-source models: Qwen, Llama, DeepSeek, Mistral, Stable Diffusion");
+  parts.push("- GPU providers earn NOS by sharing idle GPU resources");
+  parts.push("- Consumer & enterprise GPUs supported (4090, A100, H100)");
+  parts.push("- Deployment dashboard at deploy.nosana.com for one-click container deployments");
+
+  if (networkStats.totalNodes) {
+    parts.push(`\nNetwork Nodes: ${networkStats.totalNodes}`);
+  }
+
+  parts.push("\nRecent Ecosystem Developments:");
+  parts.push("- Nosana x ElizaOS Builders Challenge (April 2026) — community AI agent hackathon");
+  parts.push("- Partnership with Zero Query for autonomous trading agents");
+  parts.push("- Grants program supporting AI builders ($5K-$50K funding)");
+  parts.push("- OpenGPU integration for expanded GPU supply");
 
   return parts.join("\n");
 }
@@ -38,7 +81,7 @@ async function gatherNosanaData(): Promise<string> {
 export const nosanaEcosystemAction: Action = {
   name: "NOSANA_ECOSYSTEM",
   description:
-    "Get NOS token price, Nosana network status, and ecosystem overview. Specialized action for Nosana-specific queries.",
+    "Get NOS token price, Nosana network status, GPU compute metrics, and ecosystem overview. Specialized action for Nosana-specific queries.",
   similes: [
     "NOS_PRICE",
     "NOSANA_INFO",
@@ -47,6 +90,8 @@ export const nosanaEcosystemAction: Action = {
     "NOSANA_NETWORK",
     "WHAT_IS_NOSANA",
     "NOS_ANALYSIS",
+    "NOSANA_GPU",
+    "DECENTRALIZED_COMPUTE",
   ],
   validate: async () => true,
   handler: async (
@@ -60,21 +105,24 @@ export const nosanaEcosystemAction: Action = {
       const nosanaData = await gatherNosanaData();
       const userMsg = message.content.text ?? "";
 
-      const prompt = `You are Sentinel, a crypto research analyst running on the Nosana decentralized GPU network. You have special expertise in the Nosana ecosystem.
+      const prompt = `You are Sentinel, a crypto research analyst running on the Nosana decentralized GPU network. You have deep expertise in the Nosana ecosystem because you ARE running on it right now.
 
 Analyze the Nosana ecosystem based on the data below. You should be knowledgeable about:
 - NOS token economics and market performance
-- Nosana's role as a decentralized GPU compute provider
+- Nosana's role as a decentralized GPU compute provider for AI workloads
 - The relationship between NOS staking and GPU provisioning
-- Nosana's AI inference capabilities and supported models
-- How Nosana compares to centralized GPU providers
+- Nosana's AI inference capabilities and supported models (Qwen, Llama, etc.)
+- How Nosana compares to centralized GPU providers (cheaper, censorship-resistant, community-driven)
+- The Nosana Builders Challenge and developer community
 
 Structure your response as:
 **Nosana Ecosystem Report**
 
 **NOS Token:** Price, market cap, recent performance
 
-**Network Overview:** What Nosana does and why it matters
+**Network Overview:** What Nosana does, current network stats, supported GPU types
+
+**Use Cases:** AI inference, agent hosting, model serving, deployments
 
 **Ecosystem Strengths:** Key advantages of decentralized GPU compute
 
@@ -109,6 +157,10 @@ User question: ${userMsg}`;
     [
       { name: "{{user1}}", content: { text: "What's the NOS price?" } },
       { name: "{{agentName}}", content: { text: "Checking NOS token metrics now...", action: "NOSANA_ECOSYSTEM" } },
+    ],
+    [
+      { name: "{{user1}}", content: { text: "How does Nosana GPU compute work?" } },
+      { name: "{{agentName}}", content: { text: "Pulling Nosana network data and ecosystem overview...", action: "NOSANA_ECOSYSTEM" } },
     ],
   ],
 };

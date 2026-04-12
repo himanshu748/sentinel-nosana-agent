@@ -7,8 +7,7 @@ set -e
 API_BASE="https://dashboard.k8s.prd.nos.ci/api"
 API_KEY="${NOSANA_API_KEY:?Set NOSANA_API_KEY in your environment}"
 
-# NVIDIA 4090 Community market (good balance of cost/performance)
-MARKET="Dcwz62TisNbWuto6mLYQDDgwUqnyEhJfJDkSXbkr5c4b"
+MARKET="97G9NnvBDQ2WpKu6BGBEsFRF5MnujBBi9cSVPMnMFcEX"
 
 echo "Creating Sentinel deployment on Nosana..."
 
@@ -18,10 +17,10 @@ RESPONSE=$(curl -s -X POST "$API_BASE/deployments" \
   -d '{
     "name": "sentinel-agent",
     "market": "'$MARKET'",
-    "timeout": 60,
+    "timeout": 120,
     "replicas": 1,
     "strategy": "SIMPLE",
-    "job_definition": '$(cat nos_job_def/nosana_eliza_job_definition.json)'
+    "job_definition": '"$(cat nos_job_def/nosana_eliza_job_definition.json)"'
   }')
 
 echo "Response: $RESPONSE"

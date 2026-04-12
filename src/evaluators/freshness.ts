@@ -3,9 +3,11 @@ import type { Evaluator, IAgentRuntime, Memory, State } from "@elizaos/core";
 const STALE_THRESHOLD_MS = 5 * 60 * 1000;
 
 function extractTimestamps(text: string): Date[] {
-  const isoRegex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/g;
+  const isoRegex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g;
   const matches = text.match(isoRegex) ?? [];
-  return matches.map((m) => new Date(m)).filter((d) => !isNaN(d.getTime()));
+  return matches
+    .map((m) => new Date(m.includes("Z") || /[+-]\d{2}:?\d{2}$/.test(m) ? m : m + "Z"))
+    .filter((d) => !isNaN(d.getTime()));
 }
 
 export const freshnessEvaluator: Evaluator = {

@@ -1,7 +1,8 @@
-import { createServer } from "http";
-import { readFileSync, existsSync } from "fs";
-import { join, extname } from "path";
-import { fileURLToPath } from "url";
+import { createServer, request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { readFileSync, existsSync } from "node:fs";
+import { join, extname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const PORT = process.env.FRONTEND_PORT || 5173;
@@ -18,10 +19,10 @@ const MIME = {
 };
 
 const server = createServer((req, res) => {
-  // Proxy /api and /socket.io requests to the backend
   if (req.url.startsWith("/api/") || req.url.startsWith("/socket.io/")) {
     const url = new URL(req.url, BACKEND_URL);
-    const proxyReq = (url.protocol === "https:" ? require("https") : require("http")).request(
+    const doRequest = url.protocol === "https:" ? httpsRequest : httpRequest;
+    const proxyReq = doRequest(
       url,
       { method: req.method, headers: { ...req.headers, host: url.host } },
       (proxyRes) => {

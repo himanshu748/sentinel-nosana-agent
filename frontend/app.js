@@ -120,10 +120,13 @@
     sendBtn.disabled = false;
   }
 
+  var lastSendTime = 0;
+
   function sendMessage(text) {
     if (!text.trim() || !isConnected || !socket) return;
     clearWelcome();
     addUserMsg(text);
+    lastSendTime = Date.now();
     showTyping();
 
     socket.emit(String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE), {
@@ -155,7 +158,9 @@
   }
 
   function addAgentMsg(text) {
-    appendMsg("agent", md(text));
+    var elapsed = lastSendTime ? ((Date.now() - lastSendTime) / 1000).toFixed(1) : null;
+    appendMsg("agent", md(text), elapsed);
+    lastSendTime = 0;
   }
 
   function addSystemMessage(text) {
@@ -166,11 +171,15 @@
     scroll();
   }
 
-  function appendMsg(type, html) {
+  function appendMsg(type, html, elapsed) {
     var avatar = type === "agent" ? "S" : "U";
+    var timeInfo = timeStr();
+    if (elapsed && type === "agent") {
+      timeInfo += ' · ' + elapsed + 's';
+    }
     var el = document.createElement("div");
     el.className = "message " + type;
-    el.innerHTML = '<div class="message-avatar">' + avatar + '</div><div><div class="message-content">' + html + '</div><div class="message-time">' + timeStr() + "</div></div>";
+    el.innerHTML = '<div class="message-avatar">' + avatar + '</div><div><div class="message-content">' + html + '</div><div class="message-time">' + timeInfo + "</div></div>";
     messagesEl.appendChild(el);
     scroll();
   }
@@ -179,7 +188,7 @@
     removeTyping();
     var el = document.createElement("div");
     el.className = "message agent"; el.id = "typing";
-    el.innerHTML = '<div class="message-avatar">S</div><div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+    el.innerHTML = '<div class="message-avatar">S</div><div><div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div><span class="typing-label">Gathering data from sources...</span></div></div>';
     messagesEl.appendChild(el);
     scroll();
   }

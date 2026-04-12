@@ -1,4 +1,5 @@
 import type { Provider, IAgentRuntime, Memory, State, ProviderResult } from "@elizaos/core";
+import { cached } from "../utils/cache.js";
 
 interface FeedItem {
   title: string;
@@ -12,6 +13,8 @@ const RSS_FEEDS = [
   { name: "CoinTelegraph", url: "https://cointelegraph.com/rss" },
   { name: "The Block", url: "https://www.theblock.co/rss.xml" },
 ];
+
+const RSS_CACHE_TTL = 180_000; // 3 min
 
 function extractItems(xml: string, source: string): FeedItem[] {
   const items: FeedItem[] = [];
@@ -46,24 +49,26 @@ async function fetchFeed(name: string, url: string): Promise<FeedItem[]> {
 }
 
 async function getAllNews(): Promise<FeedItem[]> {
-  const results = await Promise.allSettled(
-    RSS_FEEDS.map((f) => fetchFeed(f.name, f.url))
-  );
+  return cached("rss:all", RSS_CACHE_TTL, async () => {
+    const results = await Promise.allSettled(
+      RSS_FEEDS.map((f) => fetchFeed(f.name, f.url))
+    );
 
-  const allItems: FeedItem[] = [];
-  for (const r of results) {
-    if (r.status === "fulfilled") {
-      allItems.push(...r.value);
+    const allItems: FeedItem[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        allItems.push(...r.value);
+      }
     }
-  }
 
-  return allItems
-    .sort((a, b) => {
-      const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
-      const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
-      return db - da;
-    })
-    .slice(0, 15);
+    return allItems
+      .sort((a, b) => {
+        const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+        const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+        return db - da;
+      })
+      .slice(0, 15);
+  });
 }
 
 export const rssFeedProvider: Provider = {

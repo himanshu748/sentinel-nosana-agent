@@ -349,6 +349,18 @@ html, body {
   30% { transform: translateY(-8px); opacity:1; }
 }
 
+.typing-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  animation: fadeInOut 2s infinite ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%,100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .message-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
 
 /* ── Input ── */
