@@ -21,6 +21,7 @@ ENV DO_NOT_TRACK=1
 WORKDIR /app
 
 COPY package.json bun.lock* ./
+COPY scripts/patch-openai-plugin.js scripts/patch-openai-plugin.js
 RUN bun install --frozen-lockfile || bun install
 
 COPY . .
