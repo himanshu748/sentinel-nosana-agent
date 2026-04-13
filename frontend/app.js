@@ -2,6 +2,7 @@
   "use strict";
 
   const API_BASE = window.location.origin;
+  const BACKEND_URL = window.location.port === "5173" ? "http://localhost:3000" : window.location.origin;
   const SOCKET_MESSAGE_TYPE = { ROOM_JOINING: 1, SEND_MESSAGE: 2 };
   const STREAM = {
     chunk: "messageStreamChunk",
@@ -19,8 +20,8 @@
   let socket = null;
   let agentId = null;
   const serverId = "00000000-0000-0000-0000-000000000000";
-  let entityId = localStorage.getItem("sentinel-eid") || (function () { var id = uuid(); localStorage.setItem("sentinel-eid", id); return id; })();
-  let channelId = localStorage.getItem("sentinel-cid") || (function () { var id = uuid(); localStorage.setItem("sentinel-cid", id); return id; })();
+  let entityId = localStorage.getItem("sentinel-eid-v3") || (function () { var id = uuid(); localStorage.setItem("sentinel-eid-v3", id); return id; })();
+  let channelId = localStorage.getItem("sentinel-cid-v3") || (function () { var id = uuid(); localStorage.setItem("sentinel-cid-v3", id); return id; })();
   let isConnected = false;
   let streamBuffer = {};
 
@@ -57,13 +58,13 @@
   }
 
   function connectSocket() {
-    socket = io(API_BASE, {
+    socket = io(BACKEND_URL, {
       path: "/socket.io",
       transports: ["websocket", "polling"],
       auth: { entityId: entityId },
     });
 
-    socket.on("connect", function () { setStatus("connecting"); });
+    socket.on("connect", function () { setStatus("connecting"); joinChannel(); });
 
     socket.on("authenticated", joinChannel);
     socket.on("connection_established", joinChannel);
@@ -71,10 +72,17 @@
     socket.on("channel_joined", onReady);
     socket.on("room_joined", onReady);
 
+    var handledMessages = {};
     socket.on("messageBroadcast", function (data) {
       if (data.senderId === entityId) return;
+      var mid = data.id || data.messageId || "";
+      var text = data.text || data.content || "";
+      if (!text) return;
+      var dedupKey = mid || text.substring(0, 100);
+      if (handledMessages[dedupKey]) return;
+      handledMessages[dedupKey] = true;
       removeTyping();
-      addAgentMsg(data.text || data.content || "");
+      addAgentMsg(text);
     });
 
     socket.on(STREAM.chunk, function (data) {
@@ -135,7 +143,8 @@
       senderId: entityId, senderName: "User",
       message: text, messageServerId: serverId,
       messageId: uuid(), source: "sentinel_frontend",
-      metadata: { isDm: true, channelType: "DM" },
+      targetUserId: agentId,
+      metadata: { isDm: true, channelType: "DM", targetUserId: agentId, recipientId: agentId },
     });
   }
 

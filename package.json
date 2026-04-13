@@ -10,7 +10,8 @@
     "dev": "elizaos dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "frontend": "node frontend/serve.js"
+    "frontend": "node frontend/serve.js",
+    "postinstall": "node scripts/patch-openai-plugin.js"
   },
   "dependencies": {
     "@elizaos/core": "^1.0.0",
