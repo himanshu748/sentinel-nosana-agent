@@ -52,7 +52,7 @@
       agentId = agents[0].id;
       connectSocket();
     } catch (e) {
-      addSystemMessage("Cannot reach server at " + API_BASE);
+      addSystemMessage("Cannot reach the ElizaOS backend at " + BACKEND_URL + ". Start it with `bun run dev`, then refresh.");
       setStatus("disconnected");
     }
   }

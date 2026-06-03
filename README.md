@@ -90,7 +90,7 @@ User Query (Chat Interface)
 - **Compute:** [Nosana](https://nosana.com) — Decentralized GPU network on Solana
 - **Data Sources:** CoinGecko (free), DeFiLlama (free), RSS feeds (free), Solana public RPC
 - **Frontend:** Custom research terminal with Socket.IO streaming
-- **Testing:** Vitest — 60+ test cases
+- **Testing:** Vitest — 60 tests
 
 ---
 
@@ -104,8 +104,8 @@ User Query (Chat Interface)
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/himanshu748/agent-challenge.git
-cd agent-challenge
+git clone https://github.com/himanshu748/sentinel-nosana-agent.git
+cd sentinel-nosana-agent
 cp .env.example .env
 bun install
 ```
@@ -151,8 +151,8 @@ Opens the Sentinel-branded research terminal at `http://localhost:5173`:
 docker build -t sentinel-agent:latest .
 
 # Tag and push to GHCR
-docker tag sentinel-agent:latest ghcr.io/himanshu748/agent-challenge:latest
-docker push ghcr.io/himanshu748/agent-challenge:latest
+docker tag sentinel-agent:latest ghcr.io/himanshu748/sentinel-nosana-agent:latest
+docker push ghcr.io/himanshu748/sentinel-nosana-agent:latest
 ```
 
 Then deploy via the [Nosana Dashboard](https://deploy.nosana.com/) using the job definition in `nos_job_def/`, or use the deploy scripts:
@@ -189,7 +189,7 @@ sentinel-nosana-agent/
 │   │   └── sourceQuality.ts        # Source diversity scoring
 │   ├── utils/
 │   │   └── cache.ts                # Generic TTL cache layer
-│   └── __tests__/                  # 60+ test cases
+│   └── __tests__/                  # 60 tests
 │       ├── cache.test.ts
 │       ├── providers.test.ts
 │       ├── plugin.test.ts
@@ -229,7 +229,7 @@ npm test
 npm run test:watch
 ```
 
-**60+ test cases** across 6 test suites covering:
+**60 tests** across 6 test suites covering:
 
 - **Cache utility** — TTL behavior, expiry, key isolation, clearing
 - **Provider formatters** — USD/percentage formatting edge cases

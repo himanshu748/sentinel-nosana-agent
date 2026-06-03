@@ -1,12 +1,13 @@
 import { createServer, request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { readFileSync, existsSync } from "node:fs";
-import { join, extname } from "node:path";
+import { join, extname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Socket } from "node:net";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const PORT = process.env.FRONTEND_PORT || 5173;
+const HOST = process.env.FRONTEND_HOST || "127.0.0.1";
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 const backendUrl = new URL(BACKEND_URL);
 
@@ -19,6 +20,13 @@ const MIME = {
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
 };
+
+const frontendRoot = resolve(__dirname);
+
+function isSafeStaticPath(filePath) {
+  const relativePath = relative(frontendRoot, filePath);
+  return relativePath && !relativePath.startsWith("..") && !relativePath.startsWith("/");
+}
 
 function proxyHttp(req, res) {
   const url = new URL(req.url, BACKEND_URL);
@@ -39,14 +47,25 @@ function proxyHttp(req, res) {
 }
 
 const server = createServer((req, res) => {
-  if (req.url.startsWith("/api/") || req.url.startsWith("/socket.io/")) {
+  const requestPath = req.url || "/";
+
+  if (requestPath.startsWith("/api/") || requestPath.startsWith("/socket.io/")) {
     proxyHttp(req, res);
     return;
   }
 
-  let filePath = join(__dirname, req.url === "/" ? "index.html" : req.url);
-  if (!existsSync(filePath)) {
-    filePath = join(__dirname, "index.html");
+  const parsedUrl = new URL(requestPath, `http://localhost:${PORT}`);
+  const staticPath = parsedUrl.pathname === "/" ? "/index.html" : parsedUrl.pathname;
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(staticPath.slice(1));
+  } catch {
+    decodedPath = "index.html";
+  }
+  let filePath = resolve(frontendRoot, decodedPath);
+
+  if (!isSafeStaticPath(filePath) || !existsSync(filePath)) {
+    filePath = join(frontendRoot, "index.html");
   }
 
   try {
@@ -61,7 +80,8 @@ const server = createServer((req, res) => {
 });
 
 server.on("upgrade", (req, socket, head) => {
-  if (!req.url.startsWith("/socket.io/")) {
+  const requestPath = req.url || "/";
+  if (!requestPath.startsWith("/socket.io/")) {
     socket.destroy();
     return;
   }
@@ -82,7 +102,7 @@ server.on("upgrade", (req, socket, head) => {
   socket.on("error", () => target.destroy());
 });
 
-server.listen(PORT, () => {
-  console.log(`Sentinel Frontend: http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Sentinel Frontend: http://${HOST}:${PORT}`);
   console.log(`Backend proxy: ${BACKEND_URL}`);
 });

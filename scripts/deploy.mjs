@@ -28,7 +28,7 @@ async function deploy() {
             id: 'sentinel-agent',
             type: 'container/run',
             args: {
-              image: 'ghcr.io/himanshu748/agent-challenge:latest',
+              image: 'ghcr.io/himanshu748/sentinel-nosana-agent:latest',
               expose: 3000,
               env: {
                 OPENAI_API_KEY: 'nosana',

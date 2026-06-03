@@ -1,6 +1,6 @@
 FROM oven/bun:1 AS base
 
-LABEL org.opencontainers.image.source=https://github.com/himanshu748/agent-challenge
+LABEL org.opencontainers.image.source=https://github.com/himanshu748/sentinel-nosana-agent
 LABEL org.opencontainers.image.description="Sentinel - Crypto Research Agent powered by ElizaOS and Nosana"
 
 RUN apt-get update && apt-get install -y \
@@ -21,7 +21,7 @@ ENV DO_NOT_TRACK=1
 WORKDIR /app
 
 COPY package.json bun.lock* ./
-COPY scripts/patch-openai-plugin.js scripts/patch-openai-plugin.js
+COPY scripts/patch-openai-plugin.cjs scripts/patch-openai-plugin.cjs
 RUN bun install --frozen-lockfile || bun install
 
 COPY . .

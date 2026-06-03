@@ -16,11 +16,11 @@ function patchFile(filePath, patches) {
   let code = fs.readFileSync(filePath, 'utf8');
   let changed = false;
   for (const { name, test, find, replace } of patches) {
-    if (test && code.includes(test)) { continue; }
-    if (code.includes(find)) {
-      code = find instanceof RegExp
-        ? code.replace(find, replace)
-        : code.replace(find, replace);
+    const alreadyPatched = test instanceof RegExp ? test.test(code) : test && code.includes(test);
+    const canPatch = find instanceof RegExp ? find.test(code) : code.includes(find);
+    if (alreadyPatched) { continue; }
+    if (canPatch) {
+      code = code.replace(find, replace);
       changed = true;
       console.log(`[patch] ${name}`);
     }

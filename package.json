@@ -1,5 +1,5 @@
 {
-  "name": "sentinel-agent",
+  "name": "sentinel-nosana-agent",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -11,17 +11,31 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "frontend": "node frontend/serve.js",
-    "postinstall": "node scripts/patch-openai-plugin.js"
+    "postinstall": "node scripts/patch-openai-plugin.cjs"
   },
   "dependencies": {
-    "@elizaos/core": "^1.0.0",
-    "@elizaos/plugin-bootstrap": "^1.0.0",
-    "@elizaos/plugin-openai": "^1.0.0",
-    "@nosana/kit": "^2.2.4"
+    "@elizaos/core": "^1.7.2",
+    "@elizaos/plugin-bootstrap": "^1.7.2",
+    "@elizaos/plugin-openai": "^1.6.0",
+    "@nosana/kit": "^2.2.17"
   },
   "devDependencies": {
-    "@elizaos/cli": "^1.0.0",
+    "@elizaos/cli": "^1.7.2",
     "typescript": "^5.0.0",
-    "vitest": "1.6.0"
+    "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "qs": "6.15.2",
+    "drizzle-orm": "0.45.2",
+    "brace-expansion": "5.0.6",
+    "jsondiffpatch": "0.7.2",
+    "simple-git": "3.36.0",
+    "uuid": "11.1.1",
+    "langsmith": "0.6.0",
+    "esbuild": "0.25.0",
+    "ip-address": "10.1.1",
+    "handlebars": "4.7.9",
+    "ws": "8.20.1",
+    "path-to-regexp": "8.4.0"
   }
 }
