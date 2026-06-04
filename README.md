@@ -112,15 +112,14 @@ bun install
 
 ### 2. Configure Environment
 
-The `.env.example` includes Nosana's hosted endpoints for the Builders Challenge:
+The `.env.example` includes Nosana's hosted endpoints for the Builders Challenge. Fill provider keys locally before running:
 
 ```env
-OPENAI_API_KEY=nosana
 OPENAI_API_URL=https://5i8frj7ann99bbw9gzpprvzj2esugg39hxbb4unypskq.node.k8s.prd.nos.ci/v1
 MODEL_NAME=Qwen3.5-9B-FP8
 ```
 
-For local development with another provider, update `OPENAI_API_URL` and `MODEL_NAME`.
+For local development with another provider, update `OPENAI_API_URL`, `MODEL_NAME`, and the matching server-side API key values in your local `.env`.
 
 ### 3. Run Locally
 
@@ -158,11 +157,11 @@ docker push ghcr.io/himanshu748/sentinel-nosana-agent:latest
 Then deploy via the [Nosana Dashboard](https://deploy.nosana.com/) using the job definition in `nos_job_def/`, or use the deploy scripts:
 
 ```bash
-# Shell script
-NOSANA_API_KEY=your_key bash scripts/deploy-nosana.sh
+# Shell script after setting NOSANA_API_KEY in your shell
+bash scripts/deploy-nosana.sh
 
-# Or Node.js SDK
-NOSANA_API_KEY=your_key node scripts/deploy.mjs
+# Or Node.js SDK after setting NOSANA_API_KEY in your shell
+node scripts/deploy.mjs
 ```
 
 ---

@@ -15,6 +15,25 @@ describe("RSS feed XML parser", () => {
     expect(items[1].title).toBe("ETH update");
   });
 
+  it("sanitizes RSS item fields before provider prompts", async () => {
+    const { extractItems } = await import("../providers/rssFeed.js") as any;
+    if (typeof extractItems !== "function") return;
+
+    const xml = `<item>
+      <title><![CDATA[BTC &amp; ETH <script>bad()</script> ${"x".repeat(220)}]]></title>
+      <link>javascript:alert(1)</link>
+      <pubDate>${"Mon, 01 Apr 2026 ".repeat(20)}</pubDate>
+    </item>`;
+
+    const [item] = extractItems(xml, "UnsafeSource");
+
+    expect(item.title).toContain("BTC & ETH");
+    expect(item.title).not.toContain("<script>");
+    expect(item.title.length).toBeLessThanOrEqual(180);
+    expect(item.link).toBe("");
+    expect(item.pubDate.length).toBeLessThanOrEqual(80);
+  });
+
   it("returns empty array for invalid XML", async () => {
     const { extractItems } = await import("../providers/rssFeed.js") as any;
     if (typeof extractItems !== "function") return;

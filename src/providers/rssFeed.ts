@@ -15,6 +15,8 @@ const RSS_FEEDS = [
 ];
 
 const RSS_CACHE_TTL = 180_000; // 3 min
+const MAX_TITLE_CHARS = 180;
+const MAX_DATE_CHARS = 80;
 
 function extractItems(xml: string, source: string): FeedItem[] {
   const items: FeedItem[] = [];
@@ -23,15 +25,48 @@ function extractItems(xml: string, source: string): FeedItem[] {
 
   while ((match = itemRegex.exec(xml)) !== null) {
     const block = match[1];
-    const title = block.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)?.[1]?.trim() ?? "";
-    const link = block.match(/<link>(.*?)<\/link>/)?.[1]?.trim() ?? "";
-    const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim() ?? "";
+    const title = sanitizeText(
+      block.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)?.[1] ?? "",
+      MAX_TITLE_CHARS
+    );
+    const link = sanitizeHttpUrl(block.match(/<link>(.*?)<\/link>/)?.[1] ?? "");
+    const pubDate = sanitizeText(
+      block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? "",
+      MAX_DATE_CHARS
+    );
 
     if (title) {
       items.push({ title, link, pubDate, source });
     }
   }
   return items;
+}
+
+function sanitizeText(value: string, maxChars: number): string {
+  return decodeXmlEntities(value)
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxChars);
+}
+
+function sanitizeHttpUrl(value: string): string {
+  const trimmed = decodeXmlEntities(value).trim();
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function decodeXmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'");
 }
 
 async function fetchFeed(name: string, url: string): Promise<FeedItem[]> {
