@@ -2,6 +2,7 @@ import type { Action, IAgentRuntime, Memory, HandlerCallback, State } from "@eli
 import { ModelType } from "@elizaos/core";
 import { getCoinData, formatUSD, formatPct } from "../providers/coingecko.js";
 import { cached } from "../utils/cache.js";
+import { safeActionError } from "../utils/errors.js";
 
 const NOSANA_CACHE_TTL = 120_000;
 
@@ -141,12 +142,12 @@ User question: ${userMsg}`;
         await callback({ text: response, action: "NOSANA_ECOSYSTEM" });
       }
       return { text: response, success: true };
-    } catch (err) {
+    } catch {
       const errorMsg = "I encountered an issue gathering Nosana ecosystem data. Some sources may be temporarily unavailable.";
       if (callback) {
         await callback({ text: errorMsg, action: "NOSANA_ECOSYSTEM" });
       }
-      return { text: errorMsg, success: false, error: String(err) };
+      return { text: errorMsg, success: false, error: safeActionError() };
     }
   },
   examples: [

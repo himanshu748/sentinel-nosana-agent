@@ -2,6 +2,7 @@ import type { Action, IAgentRuntime, Memory, HandlerCallback, State } from "@eli
 import { ModelType } from "@elizaos/core";
 import { getCoinData, formatUSD, formatPct } from "../providers/coingecko.js";
 import { getProtocolByName } from "../providers/defillama.js";
+import { safeActionError } from "../utils/errors.js";
 
 const TOKEN_MAP: Record<string, string> = {
   btc: "bitcoin", bitcoin: "bitcoin",
@@ -145,12 +146,12 @@ User message: ${userMsg}`;
         await callback({ text: response, action: "TOKEN_ANALYSIS" });
       }
       return { text: response, success: true };
-    } catch (err) {
+    } catch {
       const errorMsg = "I encountered an issue analyzing this token. Some data sources may be temporarily unavailable.";
       if (callback) {
         await callback({ text: errorMsg, action: "TOKEN_ANALYSIS" });
       }
-      return { text: errorMsg, success: false, error: String(err) };
+      return { text: errorMsg, success: false, error: safeActionError() };
     }
   },
   examples: [

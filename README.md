@@ -90,7 +90,7 @@ User Query (Chat Interface)
 - **Compute:** [Nosana](https://nosana.com) — Decentralized GPU network on Solana
 - **Data Sources:** CoinGecko (free), DeFiLlama (free), RSS feeds (free), Solana public RPC
 - **Frontend:** Custom research terminal with Socket.IO streaming
-- **Testing:** Vitest — 60 tests
+- **Testing:** Vitest — 61 tests
 
 ---
 
@@ -189,7 +189,7 @@ sentinel-nosana-agent/
 │   │   └── sourceQuality.ts        # Source diversity scoring
 │   ├── utils/
 │   │   └── cache.ts                # Generic TTL cache layer
-│   └── __tests__/                  # 60 tests
+│   └── __tests__/                  # 61 tests
 │       ├── cache.test.ts
 │       ├── providers.test.ts
 │       ├── plugin.test.ts
@@ -229,12 +229,13 @@ npm test
 npm run test:watch
 ```
 
-**60 tests** across 6 test suites covering:
+**61 tests** across 6 test suites covering:
 
 - **Cache utility** — TTL behavior, expiry, key isolation, clearing
 - **Provider formatters** — USD/percentage formatting edge cases
 - **Plugin structure** — All 5 actions, 4 providers, 2 evaluators properly registered
 - **Action handlers** — Callback invocation, error handling, graceful degradation
+- **Action safety** — Generic failure metadata that does not expose raw provider/model exception text
 - **Evaluator logic** — Freshness detection, source quality scoring
 - **RSS parser** — XML extraction, CDATA handling, edge cases
 

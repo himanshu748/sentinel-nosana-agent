@@ -4,6 +4,7 @@ import { getTopCoins, getGlobalData, formatUSD, formatPct } from "../providers/c
 import { getTopProtocols, getChainTVLs } from "../providers/defillama.js";
 import { getAllNews } from "../providers/rssFeed.js";
 import { getEpochInfo, getRecentPerformance } from "../providers/solanaOnChain.js";
+import { safeActionError } from "../utils/errors.js";
 
 async function gatherAllData(): Promise<{
   marketData: string;
@@ -138,12 +139,12 @@ User's research question: ${userMsg}`;
         await callback({ text: response, action: "RESEARCH_TOPIC" });
       }
       return { text: response, success: true };
-    } catch (err) {
+    } catch {
       const errorMsg = "I encountered an issue during research. Some data sources may be temporarily unavailable.";
       if (callback) {
         await callback({ text: errorMsg, action: "RESEARCH_TOPIC" });
       }
-      return { text: errorMsg, success: false, error: String(err) };
+      return { text: errorMsg, success: false, error: safeActionError() };
     }
   },
   examples: [

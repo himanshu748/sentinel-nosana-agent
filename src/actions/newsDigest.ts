@@ -1,6 +1,7 @@
 import type { Action, IAgentRuntime, Memory, HandlerCallback, State } from "@elizaos/core";
 import { ModelType } from "@elizaos/core";
 import { getAllNews } from "../providers/rssFeed.js";
+import { safeActionError } from "../utils/errors.js";
 
 export const newsDigestAction: Action = {
   name: "NEWS_DIGEST",
@@ -63,12 +64,12 @@ User message: ${userMsg}`;
         await callback({ text: response, action: "NEWS_DIGEST" });
       }
       return { text: response, success: true };
-    } catch (err) {
+    } catch {
       const errorMsg = "I encountered an issue fetching news. RSS feeds may be temporarily unavailable.";
       if (callback) {
         await callback({ text: errorMsg, action: "NEWS_DIGEST" });
       }
-      return { text: errorMsg, success: false, error: String(err) };
+      return { text: errorMsg, success: false, error: safeActionError() };
     }
   },
   examples: [

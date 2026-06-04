@@ -16,3 +16,4 @@
 - Keep repository, image, and deployment names aligned with `sentinel-nosana-agent`.
 - Keep public claims evidence-backed: free/open data sources, graceful degradation, and tested agent flows are the core proof.
 - Do not commit secrets; `.env.example` may contain public challenge endpoints but no private API keys.
+- Keep action failure metadata generic; user-facing text can explain degradation, but returned `error` fields must not include raw provider or model exception text.

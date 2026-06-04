@@ -2,6 +2,7 @@ import type { Action, IAgentRuntime, Memory, HandlerCallback, State } from "@eli
 import { ModelType } from "@elizaos/core";
 import { getTopCoins, getGlobalData, formatUSD, formatPct } from "../providers/coingecko.js";
 import { getTopProtocols, getChainTVLs } from "../providers/defillama.js";
+import { safeActionError } from "../utils/errors.js";
 
 async function gatherMarketData(): Promise<string> {
   const [topCoins, globalData, protocols, chains] = await Promise.all([
@@ -101,12 +102,12 @@ User message: ${userMsg}`;
         await callback({ text: response, action: "MARKET_BRIEFING" });
       }
       return { text: response, success: true };
-    } catch (err) {
+    } catch {
       const errorMsg = "I encountered an issue generating the market briefing. Some data sources may be temporarily unavailable. Please try again in a moment.";
       if (callback) {
         await callback({ text: errorMsg, action: "MARKET_BRIEFING" });
       }
-      return { text: errorMsg, success: false, error: String(err) };
+      return { text: errorMsg, success: false, error: safeActionError() };
     }
   },
   examples: [

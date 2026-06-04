@@ -4,6 +4,7 @@ import { tokenAnalysisAction } from "../actions/tokenAnalysis.js";
 import { newsDigestAction } from "../actions/newsDigest.js";
 import { researchTopicAction } from "../actions/researchTopic.js";
 import { nosanaEcosystemAction } from "../actions/nosanaEcosystem.js";
+import { ACTION_FAILURE_CODE } from "../utils/errors.js";
 import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
 
 function mockRuntime(): IAgentRuntime {
@@ -63,6 +64,7 @@ describe("MARKET_BRIEFING action", () => {
       cb as HandlerCallback
     );
     expect((result as any).success).toBe(false);
+    expect((result as any).error).toBe(ACTION_FAILURE_CODE);
     expect(cb).toHaveBeenCalledTimes(1);
   });
 });
@@ -105,6 +107,7 @@ describe("TOKEN_ANALYSIS action", () => {
       cb as HandlerCallback
     );
     expect((result as any).success).toBe(false);
+    expect((result as any).error).toBe(ACTION_FAILURE_CODE);
   });
 });
 
@@ -183,5 +186,35 @@ describe("NOSANA_ECOSYSTEM action", () => {
       cb as HandlerCallback
     );
     expect((result as any).success).toBe(false);
+    expect((result as any).error).toBe(ACTION_FAILURE_CODE);
+  });
+});
+
+describe("action error metadata", () => {
+  it("does not expose raw model/provider exception text", async () => {
+    const actions = [
+      marketBriefingAction,
+      tokenAnalysisAction,
+      newsDigestAction,
+      researchTopicAction,
+      nosanaEcosystemAction,
+    ];
+    const runtime = {
+      useModel: vi.fn().mockRejectedValue(new Error("provider failed with secret-token")),
+    } as unknown as IAgentRuntime;
+
+    for (const action of actions) {
+      const result = await action.handler(
+        runtime,
+        mockMessage("test"),
+        {} as State,
+        {},
+        vi.fn() as HandlerCallback
+      );
+
+      expect((result as any).success).toBe(false);
+      expect((result as any).error).toBe(ACTION_FAILURE_CODE);
+      expect(JSON.stringify(result)).not.toContain("secret-token");
+    }
   });
 });
