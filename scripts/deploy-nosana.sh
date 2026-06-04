@@ -11,7 +11,8 @@ MARKET="31P9d5ahEY9iSmZuXJ2xwJsbRztFK5AUCdkvgziUM3vn"
 
 echo "Creating Sentinel deployment on Nosana..."
 
-RESPONSE=$(curl -s -X POST "$API_BASE/deployments" \
+RESPONSE_FILE=$(mktemp)
+HTTP_STATUS=$(curl -s -o "$RESPONSE_FILE" -w "%{http_code}" -X POST "$API_BASE/deployments" \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -23,9 +24,10 @@ RESPONSE=$(curl -s -X POST "$API_BASE/deployments" \
     "job_definition": '"$(cat nos_job_def/nosana_eliza_job_definition.json)"'
   }')
 
-echo "Response: $RESPONSE"
+echo "Create response: HTTP $HTTP_STATUS; body omitted ($(wc -c < "$RESPONSE_FILE" | tr -d ' ') bytes)"
 
-DEPLOYMENT_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+DEPLOYMENT_ID=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('id',''))" "$RESPONSE_FILE" 2>/dev/null || echo "")
+rm -f "$RESPONSE_FILE"
 
 if [ -n "$DEPLOYMENT_ID" ]; then
   echo ""
@@ -33,11 +35,13 @@ if [ -n "$DEPLOYMENT_ID" ]; then
   echo ""
   echo "Starting deployment..."
   
-  START_RESPONSE=$(curl -s -X POST "$API_BASE/deployments/$DEPLOYMENT_ID/start" \
+  START_RESPONSE_FILE=$(mktemp)
+  START_HTTP_STATUS=$(curl -s -o "$START_RESPONSE_FILE" -w "%{http_code}" -X POST "$API_BASE/deployments/$DEPLOYMENT_ID/start" \
     -H "Authorization: Bearer $API_KEY" \
     -H "Content-Type: application/json")
   
-  echo "Start response: $START_RESPONSE"
+  echo "Start response: HTTP $START_HTTP_STATUS; body omitted ($(wc -c < "$START_RESPONSE_FILE" | tr -d ' ') bytes)"
+  rm -f "$START_RESPONSE_FILE"
   echo ""
   echo "Check status at: https://deploy.nosana.com"
   echo "Or via API: curl -H 'Authorization: Bearer \$NOSANA_API_KEY' $API_BASE/deployments/$DEPLOYMENT_ID"
