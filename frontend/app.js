@@ -226,7 +226,12 @@
 
   function md(t) {
     if (typeof marked !== "undefined" && marked.parse) {
-      try { return marked.parse(t); } catch (e) { return esc(t); }
+      try {
+        var html = marked.parse(t);
+        return (typeof DOMPurify !== "undefined" && DOMPurify.sanitize)
+          ? DOMPurify.sanitize(html)
+          : esc(t);
+      } catch (e) { return esc(t); }
     }
     return esc(t);
   }

@@ -188,7 +188,7 @@ sentinel-nosana-agent/
 │   │   └── sourceQuality.ts        # Source diversity scoring
 │   ├── utils/
 │   │   └── cache.ts                # Generic TTL cache layer
-│   └── __tests__/                  # 70 tests
+│   └── __tests__/                  # 75 tests
 │       ├── cache.test.ts
 │       ├── providers.test.ts
 │       ├── plugin.test.ts

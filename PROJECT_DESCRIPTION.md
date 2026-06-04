@@ -28,6 +28,6 @@ Sentinel is an ElizaOS v2 agent with a custom plugin that aggregates five real-t
 - **Structured output** — every response follows Summary > Data > Analysis > Sources format
 - **Custom frontend** — branded research terminal with quick actions, streaming, and mobile support
 - **Decentralized end-to-end** — inference on Nosana GPUs, data from open APIs, no centralized dependencies
-- **60 tests** — comprehensive test suite covering actions, providers, evaluators, and plugin structure
+- **75 tests** — comprehensive test suite covering actions, providers, evaluators, deployment logging, and plugin structure
 
 **Tech:** ElizaOS v2 / TypeScript / 4 providers / 5 actions / 2 evaluators / Qwen3.5-9B on Nosana / Docker / Custom Frontend
