@@ -30,6 +30,58 @@ interface Supply {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function sanitizeEpochInfo(value: unknown): EpochInfo | null {
+  if (!isRecord(value)) return null;
+  const epoch = finiteNumber(value.epoch);
+  const slotIndex = finiteNumber(value.slotIndex);
+  const slotsInEpoch = finiteNumber(value.slotsInEpoch);
+  const absoluteSlot = finiteNumber(value.absoluteSlot);
+  const blockHeight = finiteNumber(value.blockHeight);
+  const transactionCount = finiteNumber(value.transactionCount);
+
+  if (epoch == null || slotIndex == null || slotsInEpoch == null || slotsInEpoch <= 0 || absoluteSlot == null || blockHeight == null) {
+    return null;
+  }
+
+  return {
+    epoch,
+    slotIndex,
+    slotsInEpoch,
+    absoluteSlot,
+    blockHeight,
+    transactionCount: transactionCount ?? 0,
+  };
+}
+
+function sanitizePerfSample(value: unknown): PerfSample | null {
+  if (!isRecord(value)) return null;
+  const numTransactions = finiteNumber(value.numTransactions);
+  const numSlots = finiteNumber(value.numSlots);
+  const samplePeriodSecs = finiteNumber(value.samplePeriodSecs);
+  const slot = finiteNumber(value.slot);
+  if (numTransactions == null || numSlots == null || samplePeriodSecs == null || samplePeriodSecs <= 0 || slot == null) {
+    return null;
+  }
+  return { numTransactions, numSlots, samplePeriodSecs, slot };
+}
+
+function sanitizeSupply(value: unknown): Supply | null {
+  if (!isRecord(value) || !isRecord(value.value)) return null;
+  const total = finiteNumber(value.value.total);
+  const circulating = finiteNumber(value.value.circulating);
+  const nonCirculating = finiteNumber(value.value.nonCirculating);
+  if (total == null || circulating == null || nonCirculating == null) return null;
+  return { value: { total, circulating, nonCirculating } };
+}
+
 async function rpcCall<T>(method: string, params: unknown[] = []): Promise<T | null> {
   try {
     const res = await fetch(SOLANA_RPC, {
@@ -45,26 +97,31 @@ async function rpcCall<T>(method: string, params: unknown[] = []): Promise<T | n
     });
     if (!res.ok) return null;
     const data = (await res.json()) as RPCResponse<T>;
-    return data.result;
+    return isRecord(data) && "result" in data ? data.result : null;
   } catch {
     return null;
   }
 }
 
 async function getEpochInfo(): Promise<EpochInfo | null> {
-  return rpcCall<EpochInfo>("getEpochInfo");
+  const data = await rpcCall<unknown>("getEpochInfo");
+  return sanitizeEpochInfo(data);
 }
 
 async function getRecentPerformance(): Promise<PerfSample[]> {
-  const data = await rpcCall<PerfSample[]>("getRecentPerformanceSamples", [5]);
-  return data ?? [];
+  const data = await rpcCall<unknown>("getRecentPerformanceSamples", [5]);
+  return Array.isArray(data)
+    ? data.map(sanitizePerfSample).filter((sample): sample is PerfSample => sample !== null)
+    : [];
 }
 
 async function getSupply(): Promise<Supply | null> {
-  return rpcCall<Supply>("getSupply");
+  const data = await rpcCall<unknown>("getSupply");
+  return sanitizeSupply(data);
 }
 
 function formatSOL(lamports: number): string {
+  if (!Number.isFinite(lamports)) return "N/A";
   const sol = lamports / 1e9;
   if (sol >= 1e9) return `${(sol / 1e9).toFixed(2)}B SOL`;
   if (sol >= 1e6) return `${(sol / 1e6).toFixed(2)}M SOL`;

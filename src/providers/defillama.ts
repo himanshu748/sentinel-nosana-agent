@@ -19,6 +19,41 @@ interface ChainTVL {
   tvl: number;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function sanitizeProtocol(value: unknown): Protocol | null {
+  if (!isRecord(value)) return null;
+  const name = typeof value.name === "string" ? value.name : "";
+  const tvl = finiteNumber(value.tvl);
+  const chains = Array.isArray(value.chains)
+    ? value.chains.filter((chain): chain is string => typeof chain === "string")
+    : [];
+
+  if (!name || tvl == null) return null;
+  return {
+    name,
+    tvl,
+    chain: typeof value.chain === "string" ? value.chain : chains[0] ?? "unknown",
+    chains,
+    change_1d: finiteNumber(value.change_1d),
+    change_7d: finiteNumber(value.change_7d),
+    category: typeof value.category === "string" && value.category ? value.category : "Uncategorized",
+  };
+}
+
+function sanitizeChainTVL(value: unknown): ChainTVL | null {
+  if (!isRecord(value)) return null;
+  const name = typeof value.name === "string" ? value.name : "";
+  const tvl = finiteNumber(value.tvl);
+  return name && tvl != null ? { name, tvl } : null;
+}
+
 async function fetchJSON<T>(url: string): Promise<T | null> {
   try {
     const res = await fetch(url, {
@@ -34,8 +69,10 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
 
 async function getAllProtocols(): Promise<Protocol[]> {
   return cached("dl:protocols", CACHE_TTL, async () => {
-    const data = await fetchJSON<Protocol[]>(`${DEFILLAMA_BASE}/protocols`);
-    return data ?? [];
+    const data = await fetchJSON<unknown>(`${DEFILLAMA_BASE}/protocols`);
+    return Array.isArray(data)
+      ? data.map(sanitizeProtocol).filter((protocol): protocol is Protocol => protocol !== null)
+      : [];
   });
 }
 
@@ -46,9 +83,13 @@ async function getTopProtocols(limit = 15): Promise<Protocol[]> {
 
 async function getChainTVLs(): Promise<ChainTVL[]> {
   return cached("dl:chains", CACHE_TTL, async () => {
-    const data = await fetchJSON<ChainTVL[]>(`${DEFILLAMA_BASE}/v2/chains`);
-    if (!data) return [];
-    return data.sort((a, b) => b.tvl - a.tvl).slice(0, 15);
+    const data = await fetchJSON<unknown>(`${DEFILLAMA_BASE}/v2/chains`);
+    if (!Array.isArray(data)) return [];
+    return data
+      .map(sanitizeChainTVL)
+      .filter((chain): chain is ChainTVL => chain !== null)
+      .sort((a, b) => b.tvl - a.tvl)
+      .slice(0, 15);
   });
 }
 
@@ -59,6 +100,7 @@ async function getProtocolByName(name: string): Promise<Protocol | null> {
 }
 
 function formatUSD(n: number): string {
+  if (!Number.isFinite(n)) return "N/A";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;

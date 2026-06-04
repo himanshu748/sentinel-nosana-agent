@@ -22,6 +22,57 @@ interface GlobalData {
   market_cap_change_percentage_24h_usd: number;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function sanitizeCoinMarketData(value: unknown): CoinMarketData | null {
+  if (!isRecord(value)) return null;
+  const currentPrice = finiteNumber(value.current_price);
+  const marketCap = finiteNumber(value.market_cap);
+  const marketCapRank = finiteNumber(value.market_cap_rank);
+  const totalVolume = finiteNumber(value.total_volume);
+  const change24h = finiteNumber(value.price_change_percentage_24h);
+  const id = typeof value.id === "string" ? value.id : "";
+  const symbol = typeof value.symbol === "string" ? value.symbol : "";
+  const name = typeof value.name === "string" ? value.name : "";
+
+  if (!id || !symbol || !name || currentPrice == null || marketCap == null || marketCapRank == null || totalVolume == null || change24h == null) {
+    return null;
+  }
+
+  const change7d = finiteNumber(value.price_change_percentage_7d_in_currency);
+  return {
+    id,
+    symbol,
+    name,
+    current_price: currentPrice,
+    market_cap: marketCap,
+    market_cap_rank: marketCapRank,
+    total_volume: totalVolume,
+    price_change_percentage_24h: change24h,
+    price_change_percentage_7d_in_currency: change7d ?? undefined,
+  };
+}
+
+function sanitizeGlobalData(value: unknown): GlobalData | null {
+  if (!isRecord(value)) return null;
+  const totalMarketCap = isRecord(value.total_market_cap) ? finiteNumber(value.total_market_cap.usd) : null;
+  const totalVolume = isRecord(value.total_volume) ? finiteNumber(value.total_volume.usd) : null;
+  const change24h = finiteNumber(value.market_cap_change_percentage_24h_usd);
+
+  if (totalMarketCap == null || totalVolume == null || change24h == null) return null;
+  return {
+    total_market_cap: { usd: totalMarketCap },
+    total_volume: { usd: totalVolume },
+    market_cap_change_percentage_24h_usd: change24h,
+  };
+}
+
 async function fetchJSON<T>(url: string): Promise<T | null> {
   try {
     const res = await fetch(url, {
@@ -37,30 +88,33 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
 
 async function getTopCoins(limit = 20): Promise<CoinMarketData[]> {
   return cached(`cg:top:${limit}`, CACHE_TTL, async () => {
-    const data = await fetchJSON<CoinMarketData[]>(
+    const data = await fetchJSON<unknown>(
       `${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false&price_change_percentage=7d`
     );
-    return data ?? [];
+    return Array.isArray(data)
+      ? data.map(sanitizeCoinMarketData).filter((coin): coin is CoinMarketData => coin !== null)
+      : [];
   });
 }
 
 async function getGlobalData(): Promise<GlobalData | null> {
   return cached("cg:global", CACHE_TTL, async () => {
-    const data = await fetchJSON<{ data: GlobalData }>(`${COINGECKO_BASE}/global`);
-    return data?.data ?? null;
+    const data = await fetchJSON<unknown>(`${COINGECKO_BASE}/global`);
+    return isRecord(data) ? sanitizeGlobalData(data.data) : null;
   });
 }
 
 async function getCoinData(coinId: string): Promise<CoinMarketData | null> {
   return cached(`cg:coin:${coinId}`, CACHE_TTL, async () => {
-    const coins = await fetchJSON<CoinMarketData[]>(
-      `${COINGECKO_BASE}/coins/markets?vs_currency=usd&ids=${coinId}&sparkline=false&price_change_percentage=7d`
+    const coins = await fetchJSON<unknown>(
+      `${COINGECKO_BASE}/coins/markets?vs_currency=usd&ids=${encodeURIComponent(coinId)}&sparkline=false&price_change_percentage=7d`
     );
-    return coins?.[0] ?? null;
+    return Array.isArray(coins) ? sanitizeCoinMarketData(coins[0]) : null;
   });
 }
 
 function formatUSD(n: number): string {
+  if (!Number.isFinite(n)) return "N/A";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -69,7 +123,7 @@ function formatUSD(n: number): string {
 }
 
 function formatPct(n: number | null | undefined): string {
-  if (n == null) return "N/A";
+  if (n == null || !Number.isFinite(n)) return "N/A";
   const sign = n >= 0 ? "+" : "";
   return `${sign}${n.toFixed(1)}%`;
 }
