@@ -90,7 +90,7 @@ User Query (Chat Interface)
 - **Compute:** [Nosana](https://nosana.com) — Decentralized GPU network on Solana
 - **Data Sources:** CoinGecko (free), DeFiLlama (free), RSS feeds (free), Solana public RPC
 - **Frontend:** Custom research terminal with Socket.IO streaming
-- **Testing:** Vitest — 70 tests
+- **Testing:** Vitest — 75 tests
 
 ---
 
@@ -228,7 +228,7 @@ npm test
 npm run test:watch
 ```
 
-**70 tests** across 6 test suites covering:
+**75 tests** across 7 test suites covering:
 
 - **Cache utility** — TTL behavior, expiry, key isolation, clearing
 - **Provider formatters** — USD/percentage formatting edge cases
@@ -237,6 +237,7 @@ npm run test:watch
 - **Action safety** — Generic failure metadata that does not expose raw provider/model exception text
 - **Evaluator logic** — Freshness detection, source quality scoring
 - **RSS parser** — XML extraction, CDATA handling, edge cases
+- **Deployment logging** — sanitized success/error summaries without raw provider responses
 
 ---
 

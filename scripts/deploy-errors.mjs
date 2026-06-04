@@ -3,6 +3,29 @@ export function deploymentErrorSummary(err) {
   return `${name || 'Error'}; details sanitized`;
 }
 
+export function deploymentCreatedSummary(deployment) {
+  const id = typeof deployment?.id === 'string' && deployment.id ? deployment.id : 'unknown';
+  const status =
+    typeof deployment?.status === 'string' && deployment.status
+      ? deployment.status
+      : 'unknown';
+  const endpointCount = Array.isArray(deployment?.endpoints)
+    ? deployment.endpoints.length
+    : 0;
+  return `id=${id}; status=${status}; endpoints=${endpointCount}; details sanitized`;
+}
+
+export function deploymentStatusSummary(deployment) {
+  const status =
+    typeof deployment?.status === 'string' && deployment.status
+      ? deployment.status
+      : 'unknown';
+  const endpoint = Array.isArray(deployment?.endpoints) && deployment.endpoints[0]?.url
+    ? deployment.endpoints[0].url
+    : 'pending';
+  return `status=${status}; endpoint=${endpoint}`;
+}
+
 function statusCategory(statusCode) {
   if (statusCode >= 500) return 'server_error';
   if (statusCode === 401) return 'unauthorized';

@@ -1,5 +1,10 @@
 import { createNosanaClient } from '@nosana/kit';
-import { deploymentErrorSummary, deploymentResponseSummary } from './deploy-errors.mjs';
+import {
+  deploymentCreatedSummary,
+  deploymentErrorSummary,
+  deploymentResponseSummary,
+  deploymentStatusSummary,
+} from './deploy-errors.mjs';
 
 const apiKey = process.env.NOSANA_API_KEY;
 if (!apiKey) {
@@ -49,14 +54,13 @@ async function deploy() {
       },
     });
 
-    console.log('Deployment created:', JSON.stringify(deployment, null, 2));
+    console.log('Deployment created:', deploymentCreatedSummary(deployment));
 
     if (deployment?.id) {
       console.log('\nStarting deployment...');
       const dep = await client.api.deployments.get(deployment.id);
       await dep.start();
-      console.log('Status:', dep.status);
-      console.log('Endpoint:', dep.endpoints?.[0]?.url);
+      console.log('Deployment status:', deploymentStatusSummary(dep));
       console.log('\nCheck status at: https://deploy.nosana.com');
     }
   } catch (err) {
